@@ -1,0 +1,55 @@
+Eine starke IR trägt:
+- Wertetyp
+- Speicherlayout
+- Mutabilität
+- Alias-Klassen
+- Lifetime
+- Effekte
+
+
+Effekte:
+- read/write sets
+- pure vs impure
+- IO, Alloc, Atomic, Sync
+
+Die IR muss:
+- Parallelität ausdrücken
+- Speicherhierarchien modellieren
+- Kosten abschätzen können
+
+
+
+
+
+
+Eine realistische Architektur:
+- High-Level IR (HIR) **Zweck:** Semantische Analyse, Sprachnahe Optimierungen ++Ownership,Effekte,Kontrollfluss++
+- Mid-Level IR (MIR) **Zweck:** Abstraktionsabbau, Performance-Optimierungen ++Vectorisierung,Loop transformations,Memory placement++
+- Low-Level IR (LIR) **Zweck:** Codegenerierung ++target-aware++
+
+
+
+######
+AST ist für Menschen,
+HIR ist für Semantik,
+MIR ist für Optimierung,
+LIR ist für Maschinen.
+######
+
+Konkrete Unterschiede AST vs HIR
+AST:
+- if / else / while / for in zig Varianten
+- short-circuit implizit
+- oft ungetypt oder nur partiell
+- Typen syntaktisch, nicht semantisch
+- Speicher nicht sichtbar
+
+HIR:
+- einheitliche Kontrollkonstrukte
+- explizite Bedingungen
+- explizite Abbruchpfade
+- jeder Ausdruck typisiert
+- implizite Konversionen explizit
+- implizite Allokationen explizit
+- pure vs impure
+- Ownership, Mutabilität, Borrowing
