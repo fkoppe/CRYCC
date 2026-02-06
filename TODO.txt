@@ -1,0 +1,21 @@
+TODO
+====
+
+Pipeline / Architektur
+- Verdrahten eines klaren Pipeline-Flows in `src/main.zig` (parse -> HIR, später MIR/LIR/Backend).
+- TinyC AST -> HIR Lowering implementieren in `src/hir/tiny_c/from_ast.zig` (lowerModule/lowerStmt/lowerExpr).
+
+Parser / Fehlerbehandlung
+- Parser-Fehlerbehandlung konsolidieren: immer `ast_error` setzen (NoProduction/UnexpectedToken/EOF) in `src/frontend/core/parser/llk.zig`.
+- Helper wie `setError(message, span)` einführen, um Doppellogik zu vermeiden.
+
+AST / Grammatik Konsistenz
+- `stmt_list` vs `block` konsistent machen (Liste oder Block, aber nicht beides).
+- Left-Associativity für `+`/`-` explizit machen, Tests für `1+2+3` und `1-2-3`.
+
+Crylang / Platzhalter
+- Leere Crylang-Dateien entweder entfernen, oder mit klaren Stubs (`@compileError("not implemented")`) versehen.
+
+LIR / Backend
+- LIR-Strukturen genauer typisieren/ownership definieren (IDs vs Werte).
+- MIR -> LIR Lowering beginnen (aktuell stub in `src/lir/from_mir.zig`).

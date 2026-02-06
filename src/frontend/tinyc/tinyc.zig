@@ -1,3 +1,4 @@
-const ASTNode = @import("ast.zig").ASTNode;
-const Lexer = @import("lexer.zig").Lexer;
-const Parser = @import("parser.zig").Parser;
+pub const ast = @import("ast.zig");
+pub const ASTNode = ast.ASTNode;
+pub const Lexicon = @import("lexicon.zig").Lexicon;
+pub const Grammar = @import("grammar.zig").Grammar;

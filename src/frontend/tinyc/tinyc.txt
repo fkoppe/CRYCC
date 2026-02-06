@@ -1,0 +1,53 @@
+This is an LL(1) version of the TinyC grammar.
+The original grammar can be found at: https://github.com/fkoppe/tinyc-compiler/blob/master/src/tinyc.y
+
+######################################################################
+
+
+<program> ::= <statement>
+
+<statement> ::= <matched_stmt>
+              | <unmatched_stmt>
+
+<matched_stmt> ::=
+      "if" <paren_expr> <matched_stmt> "else" <matched_stmt>
+    | "while" <paren_expr> <matched_stmt>
+    | "do" <matched_stmt> "while" <paren_expr> ";"
+    | "{" <stmt_list> "}"
+    | <expr> ";"
+    | ";"
+
+<unmatched_stmt> ::=
+      "if" <paren_expr> <statement>
+    | "if" <paren_expr> <matched_stmt> "else" <unmatched_stmt>
+
+<stmt_list> ::= <statement> <stmt_list>
+              | ε
+
+<paren_expr> ::= "(" <expr> ")"
+
+<expr> ::= <id> "=" <expr>
+         | <test>
+
+<test> ::= <sum> <test_tail>
+
+<test_tail> ::= "<" <sum>
+              | ε
+
+<sum> ::= <term> <sum_tail>
+
+<sum_tail> ::= "+" <term> <sum_tail>
+             | "-" <term> <sum_tail>
+             | ε
+
+<term> ::= <id>
+         | <int>
+         | <paren_expr>
+
+<id> ::= "a" | "b" | "c" | "d" | ... | "z"
+
+<int> ::= <an_unsigned_decimal_integer>
+
+
+
+######################################################################

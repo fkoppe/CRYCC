@@ -53,3 +53,25 @@ HIR:
 - implizite Allokationen explizit
 - pure vs impure
 - Ownership, Mutabilität, Borrowing
+
+
+
+
+
+HIR (Python-artig, semantisch)
+x = a + b
+if x < 10:
+    f(x)
+
+MIR (technisch, aber noch portabel)
+t0 = load a
+t1 = load b
+t2 = add t0, t1
+t3 = lt t2, 10
+br t3, bb1, bb2
+
+LIR (maschinennahe)
+mov rax, [a]
+add rax, [b]
+cmp rax, 10
+jl call_f

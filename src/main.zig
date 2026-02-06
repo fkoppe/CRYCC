@@ -1,50 +1,83 @@
 const std = @import("std");
 const Io = std.Io;
 
-const CRYCC = @import("CRYCC");
+const crycc = @import("CRYCC");
+
+const Interner = crycc.front.Interner;
+const Lexer = crycc.front.Lexer(crycc.front.tinyc.Lexicon);
+const Parser = crycc.front.LLKParser(crycc.front.tinyc.Grammar);
+const tinyc_hir = crycc.tinyc_hir.tinyc_hir;
+const tinyc_lower = crycc.tinyc_hir_lower;
+const tinyc_mir = crycc.tinyc_mir.tinyc_mir;
+const tinyc_mir_lower = crycc.tinyc_mir_lower;
+const mir_interpreter = crycc.mir_interpreter;
 
 pub fn main(init: std.process.Init) !void {
-    std.debug.print("All your codebase are belong to us.\n", .{});
-
     const arena: std.mem.Allocator = init.arena.allocator();
-    _ = arena;
 
-    //// Accessing command line arguments:
-    //const args = try init.minimal.args.toSlice(arena);
-    //for (args) |arg| {
-    //    std.log.info("arg: {s}", .{arg});
-    //}
+    var interner = Interner.init(arena);
+    defer interner.deinit();
 
-    const io = init.io;
-    _ = io;
+    const input =
+        \\a = 0;
+        \\if (1 < 2) { ; }
+        \\while (a < 3) { a = a + 1; b = 1000; }
+        \\// comment
+    ;
 
-    //// Stdout is for the actual output of your application, for example if you
-    //// are implementing gzip, then only the compressed bytes should be sent to
-    //// stdout, not any debugging messages.
-    //var stdout_buffer: [1024]u8 = undefined;
-    //var stdout_file_writer: Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
-    //const stdout_writer = &stdout_file_writer.interface;
+    var lexer = Lexer.init(arena, input, &interner);
 
-    //try CRYCC.printAnotherMessage(stdout_writer);
+    var tokens_buf = std.ArrayListUnmanaged(Lexer.SpannedToken){};
+    defer tokens_buf.deinit(arena);
 
-    //try stdout_writer.flush(); // Don't forget to flush!
+    while (true) {
+        const token = lexer.next() catch |err| switch (err) {
+            Lexer.Error.EndOfStream => break,
+            else => {
+                const e = lexer.last_error.?;
+                std.debug.print(
+                    "Lexer Error: {s} at #{} {}-{}\n",
+                    .{ e.message, e.span.source_id, e.span.start, e.span.end },
+                );
+                return err;
+            },
+        };
+        try tokens_buf.append(arena, token);
+        token.value.print(&interner);
+    }
+
+    std.debug.print("\n", .{});
+
+    var parser = try Parser.init(arena, tokens_buf.items);
+    defer parser.deinit();
+
+    const ast = parser.parse() catch |err| {
+        if (parser.ast_error) |e| {
+            std.debug.print(
+                "Parser error: {s} at {} {}-{}\n",
+                .{ e.message, e.span.source_id, e.span.start, e.span.end },
+            );
+        } else {
+            std.debug.print("Parser error: {}\n", .{err});
+        }
+        return err;
+    };
+
+    ast.print();
+
+    const hir_mod = try tinyc_lower.lowerProgram(arena, ast);
+    tinyc_hir.printModule(hir_mod);
+
+    const mir_mod = try tinyc_mir_lower.lowerModule(arena, hir_mod);
+    tinyc_mir.printModule(mir_mod);
+
+    const result = mir_interpreter.runModule(arena, mir_mod, 0) catch |err| {
+        std.debug.print("MIR interpreter error: {}\n", .{err});
+        return err;
+    };
+    if (result.value) |v| {
+        std.debug.print("MIR Result: {d}\n", .{v});
+    } else {
+        std.debug.print("MIR Result: void\n", .{});
+    }
 }
-
-//test "simple test" {
-//    const gpa = std.testing.allocator;
-//    var list: std.ArrayList(i32) = .empty;
-//    defer list.deinit(gpa); // Try commenting this out and see if zig detects the memory leak!
-//    try list.append(gpa, 42);
-//    try std.testing.expectEqual(@as(i32, 42), list.pop());
-//}
-//
-//test "fuzz example" {
-//    const Context = struct {
-//        fn testOne(context: @This(), input: []const u8) anyerror!void {
-//            _ = context;
-//            // Try passing `--fuzz` to `zig build test` and see if it manages to fail this test case!
-//            try std.testing.expect(!std.mem.eql(u8, "canyoufindme", input));
-//        }
-//    };
-//    try std.testing.fuzz(Context{}, Context.testOne, .{});
-//}

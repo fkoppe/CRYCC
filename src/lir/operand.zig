@@ -1,7 +1,8 @@
 pub const Reg = enum {
     v0,
     v1,
-    v2, // virtual registers
+    v2,
+    v4,
 };
 
 pub const Operand = union(enum) {
